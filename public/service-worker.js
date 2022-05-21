@@ -79,6 +79,7 @@ self.addEventListener("fetch", function (e) {
         if (response) {
           return response;
         } else if (e.request.headers.get("accept").includes("text/html")) {
+          console.log(e.request, response)
           // return the cached home page for all requests for html pages
           return caches.match("/");
         }
