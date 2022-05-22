@@ -53,20 +53,17 @@ self.addEventListener("fetch", function (e) {
     e.respondWith(
       caches
         .open(DATA_CACHE_NAME)
-        .then((cache) => {
-          return fetch(e.request)
-            .then((response) => {
-              // If the response was good, clone it and store it in the cache.
-              if (response.status === 200) {
-                cache.put(e.request.url, response.clone());
-              }
-
-              return response;
-            })
-            .catch((err) => {
-              // Network request failed, try to get it from the cache.
-              return cache.match(e.request);
-            });
+        .then(async (cache) => {
+          try {
+            const response = await fetch(e.request);
+            // If the response was good, clone it and store it in the cache.
+            if (response.status === 200) {
+              cache.put(e.request.url, response.clone());
+            }
+            return response;
+          } catch (err) {
+            return await cache.match(e.request);
+          }
         })
         .catch((err) => console.log(err))
     );
@@ -74,16 +71,15 @@ self.addEventListener("fetch", function (e) {
   }
 
   e.respondWith(
-    fetch(e.request).catch(function () {
-      return caches.match(e.request).then(function (response) {
-        if (response) {
-          return response;
-        } else if (e.request.headers.get("accept").includes("text/html")) {
-          console.log(e.request, response)
-          // return the cached home page for all requests for html pages
-          return caches.match("/");
-        }
-      });
+    fetch(e.request).catch(async function () {
+      const response = await caches.match(e.request);
+      if (response) {
+        return response;
+      } else if (e.request.headers.get("accept").includes("text/html")) {
+        console.log(e.request, response);
+        // return the cached home page for all requests for html pages
+        return caches.match("/");
+      }
     })
   );
 });
